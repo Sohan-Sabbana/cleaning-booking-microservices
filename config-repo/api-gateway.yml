@@ -1,0 +1,60 @@
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+
+        - id: professionals-native
+          uri: lb://professionals-service
+          predicates:
+            - Path=/api/v1/**
+
+        - id: professionals
+          uri: lb://professionals-service
+          predicates:
+            - Path=/api/professionals/**
+          filters:
+            - RewritePath=/api/professionals/(?<segment>.*),/api/${segment}
+        - id: booking
+          uri: lb://booking-service
+          predicates:
+            - Path=/api/bookings/**,/api/availability/**
+
+        - id: professionals-openapi
+          uri: lb://professionals-service
+          predicates:
+            - Path=/professionals/v3/api-docs/**
+          filters:
+            - RewritePath=/professionals/(?<segment>.*),/${segment}
+
+        - id: booking-openapi
+          uri: lb://booking-service
+          predicates:
+            - Path=/booking/v3/api-docs/**
+          filters:
+            - RewritePath=/booking/(?<segment>.*),/${segment}
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    disable-swagger-default-url: true
+    urls:
+      - name: professionals-service
+        url: /professionals/v3/api-docs
+      - name: booking-service
+        url: /booking/v3/api-docs
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_DEFAULTZONE:http://localhost:8761/eureka/}
