@@ -23,26 +23,25 @@ public class AvailabilityService {
   private static final LocalTime END = LocalTime.of(22, 0);
   private static final int STEP_MINUTES = 30;
 
-  private final ProfessionalsClient professionalsClient;
+  private final ProfessionalsGateway professionalsGateway;
   private final BookingRepository bookingRepository;
   private final PolicyChain policyChain;
 
-  public AvailabilityService(ProfessionalsClient professionalsClient, BookingRepository bookingRepository) {
-    this.professionalsClient = professionalsClient;
+  public AvailabilityService(ProfessionalsGateway professionalsGateway, BookingRepository bookingRepository) {
+    this.professionalsGateway = professionalsGateway;
     this.bookingRepository = bookingRepository;
     this.policyChain = new PolicyChain(List.of(new NotFridayPolicy(), new WorkingHoursPolicy(), new DurationPolicy()));
   }
 
-  @Cacheable(cacheNames = "booking-vehicles")
   public List<VehicleDto> vehicles() {
-    return professionalsClient.listVehicles();
+    return professionalsGateway.listVehicles();
   }
 
   @Cacheable(cacheNames = "booking-availability-by-date", key = "#date.toString()")
   public Map<String, Map<String, Map<Integer, List<LocalTime>>>> availabilityByDate(LocalDate date) {
     var result = new LinkedHashMap<String, Map<String, Map<Integer, List<LocalTime>>>>();
 
-    for (var v : professionalsClient.listVehicles()) {
+    for (var v : professionalsGateway.listVehicles()) {
       var byCleaner = new LinkedHashMap<String, Map<Integer, List<LocalTime>>>();
       for (var c : v.cleaners()) {
         var dayFrom = date.atStartOfDay();
@@ -65,7 +64,7 @@ public class AvailabilityService {
     var endAt = startAt.plusHours(durationHours);
     policyChain.validate(startAt, endAt, durationHours);
 
-    var vehicle = professionalsClient.listVehicles().stream()
+    var vehicle = professionalsGateway.listVehicles().stream()
         .filter(v -> v.id().equals(vehicleId))
         .findFirst()
         .orElseThrow(() -> new IllegalArgumentException("Unknown vehicleId: " + vehicleId));
@@ -87,7 +86,7 @@ public class AvailabilityService {
     var endAt = startAt.plusHours(durationHours);
     policyChain.validate(startAt, endAt, durationHours);
 
-    for (var v : professionalsClient.listVehicles()) {
+    for (var v : professionalsGateway.listVehicles()) {
       var avail = availableCleanersFor(v.id(), startAt, durationHours);
       if (avail.size() >= professionalCount) {
         return Optional.of(new VehicleCandidate(v.id(), avail));

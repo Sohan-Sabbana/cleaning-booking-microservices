@@ -74,44 +74,37 @@ public class BookingAppService {
   @CacheEvict(cacheNames = {"booking-availability-by-date", "booking-availability-slot"}, allEntries = true)
   public BookingEntity reschedule(String bookingId, LocalDateTime newStartAt, int newDurationHours) {
     var existing = bookingRepository.findById(bookingId)
-        .orElseThrow(() -> new DomainException("Booking not found: " + bookingId));
+            .orElseThrow(() -> new DomainException("Booking not found: " + bookingId));
 
     var previousAssignments = bookingCleanerRepository.findByBooking_Id(bookingId);
+    int professionalCount = previousAssignments.size();
+
+    var vehicleCandidate = availabilityService.findVehicleWithCapacity(newStartAt, newDurationHours, professionalCount)
+            .orElseThrow(() -> new DomainException("No availability to reschedule for the requested time window."));
+
     bookingCleanerRepository.deleteByBooking_Id(bookingId);
 
-    try {
-      int professionalCount = previousAssignments.size();
-      var vehicleCandidate = availabilityService.findVehicleWithCapacity(newStartAt, newDurationHours, professionalCount)
-          .orElseThrow(() -> new DomainException("No availability to reschedule for the requested time window."));
+    var newEndAt = newStartAt.plusHours(newDurationHours);
+    existing.reschedule(newStartAt, newEndAt, newDurationHours, vehicleCandidate.vehicleId());
+    bookingRepository.save(existing);
 
-      var newEndAt = newStartAt.plusHours(newDurationHours);
-      existing.reschedule(newStartAt, newEndAt, newDurationHours, vehicleCandidate.vehicleId());
-      bookingRepository.save(existing);
-
-      List<String> selected = List.copyOf(vehicleCandidate.availableCleanerIds().subList(0, professionalCount));
-      for (var cleanerId : selected) {
-        bookingCleanerRepository.save(new BookingCleanerEntity(existing, cleanerId));
-      }
-
-      bookingEventPublisher.publish(new BookingEventMessage(
-          BookingEventType.BOOKING_RESCHEDULED,
-          bookingId,
-          existing.getVehicleId(),
-          OffsetDateTime.of(existing.getStartAt(), ZoneOffset.UTC),
-          OffsetDateTime.of(existing.getEndAt(), ZoneOffset.UTC),
-          existing.getDurationHours(),
-          selected,
-          OffsetDateTime.now(ZoneOffset.UTC)
-      ));
-
-      return existing;
-
-    } catch (RuntimeException ex) {
-      // best-effort restore (transaction will rollback anyway)
-      for (var bc : previousAssignments) {
-        bookingCleanerRepository.save(bc);
-      }
-      throw ex;
+    List<String> selected = List.copyOf(vehicleCandidate.availableCleanerIds().subList(0, professionalCount));
+    for (var cleanerId : selected) {
+      bookingCleanerRepository.save(new BookingCleanerEntity(existing, cleanerId));
     }
+
+    bookingEventPublisher.publish(new BookingEventMessage(
+            BookingEventType.BOOKING_RESCHEDULED,
+            bookingId,
+            existing.getVehicleId(),
+            OffsetDateTime.of(existing.getStartAt(), ZoneOffset.UTC),
+            OffsetDateTime.of(existing.getEndAt(), ZoneOffset.UTC),
+            existing.getDurationHours(),
+            selected,
+            OffsetDateTime.now(ZoneOffset.UTC)
+    ));
+
+    return existing;
   }
+
 }
