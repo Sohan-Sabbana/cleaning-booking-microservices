@@ -31,6 +31,7 @@
 		<spring-cloud.version>2025.1.1</spring-cloud.version>
 		<springdoc.version>3.0.0</springdoc.version>
 		<mapstruct.version>1.5.5.Final</mapstruct.version>
+		<sonar-maven-plugin.version>5.0.0.4389</sonar-maven-plugin.version>
 	</properties>
 
 	<dependencyManagement>
@@ -203,6 +204,13 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
+
+			<plugin>
+				<groupId>org.sonarsource.scanner.maven</groupId>
+				<artifactId>sonar-maven-plugin</artifactId>
+				<version>${sonar-maven-plugin.version}</version>
+			</plugin>
+
 		</plugins>
 	</build>
 
