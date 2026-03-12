@@ -11,16 +11,32 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<BookingEntity, String> {
 
   @Query("select b from BookingEntity b " +
-         "join b.cleaners bc " +
-         "where bc.cleanerId = :cleanerId " +
-         "and b.status = :status " +
-         "and b.startAt >= :from " +
-         "and b.startAt < :to " +
-         "order by b.startAt asc")
+          "join b.cleaners bc " +
+          "where bc.cleanerId = :cleanerId " +
+          "and b.status = :status " +
+          "and b.id <> :excludeBookingId " +
+          "and b.startAt >= :from " +
+          "and b.startAt < :to " +
+          "order by b.startAt asc")
+  List<BookingEntity> findActiveBookingsForCleanerWithinExcludingBooking(
+          String cleanerId,
+          BookingStatus status,
+          LocalDateTime from,
+          LocalDateTime to,
+          String excludeBookingId
+  );
+
+  @Query("select b from BookingEntity b " +
+          "join b.cleaners bc " +
+          "where bc.cleanerId = :cleanerId " +
+          "and b.status = :status " +
+          "and b.startAt >= :from " +
+          "and b.startAt < :to " +
+          "order by b.startAt asc")
   List<BookingEntity> findActiveBookingsForCleanerWithin(
-      String cleanerId,
-      BookingStatus status,
-      LocalDateTime from,
-      LocalDateTime to
+          String cleanerId,
+          BookingStatus status,
+          LocalDateTime from,
+          LocalDateTime to
   );
 }

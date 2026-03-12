@@ -11,7 +11,7 @@ INSERT INTO booking (id, start_at, end_at, duration_hours, vehicle_id, status) V
                                                                                    (
                                                                                        '22222222-2222-2222-2222-222222222222',
                                                                                        '2026-03-10 12:00:00',
-                                                                                       '2026-03-10 15:00:00',
+                                                                                       '2026-03-10 14:00:00',
                                                                                        3,
                                                                                        '6c84d63c-cfb9-4088-933f-66c837794787',
                                                                                        'ACTIVE'
