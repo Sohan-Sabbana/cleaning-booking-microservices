@@ -39,6 +39,18 @@
 		<maven-failsafe-plugin-version>3.5.2</maven-failsafe-plugin-version>
 
 		<sonar-maven-plugin.version>5.0.0.4389</sonar-maven-plugin.version>
+
+		<sonar.host.url>http://localhost:9000</sonar.host.url>  <!-- Changed to localhost if running locally -->
+		<sonar.token>sqp_e441439d90953021f3bbd93d6d8a5028d1c59015</sonar.token> <!-- Authentication Token -->
+		<sonar.projectKey>Justlife_case_study_professional_service</sonar.projectKey>
+		<sonar.projectName>Justlife_case_study_professional_service</sonar.projectName>
+		<sonar.projectVersion>1.0</sonar.projectVersion>
+		<sonar.sources>src/main</sonar.sources>
+		<sonar.tests>src/test</sonar.tests>
+		<sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
+		<sonar.java.binaries>target/classes</sonar.java.binaries>
+
+
 	</properties>
 
 	<dependencyManagement>

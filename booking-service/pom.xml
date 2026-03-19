@@ -42,9 +42,9 @@
 		<sonar-maven-plugin.version>5.0.0.4389</sonar-maven-plugin.version>
 
 		<sonar.host.url>http://localhost:9000</sonar.host.url>  <!-- Changed to localhost if running locally -->
-		<sonar.token>sqp_30f594cefaa31999f74aa91630e2c6306de96a5e</sonar.token> <!-- Authentication Token -->
-		<sonar.projectKey>Justlife_case_study</sonar.projectKey>
-		<sonar.projectName>Justlife_case_study</sonar.projectName>
+		<sonar.token>sqp_9bfa44b40a7b00936e06a6369229e7b559f15c14</sonar.token> <!-- Authentication Token -->
+		<sonar.projectKey>Justlife_case_study_booking_service</sonar.projectKey>
+		<sonar.projectName>JJustlife_case_study_booking_service</sonar.projectName>
 		<sonar.projectVersion>1.0</sonar.projectVersion>
 		<sonar.sources>src/main</sonar.sources>
 		<sonar.tests>src/test</sonar.tests>
