@@ -1,5 +1,10 @@
 # Case Study - Cleaning Booking Microservices
 
+<p align="center">
+    <img src="screenshots/main_image.png" alt="Cleaning Booking Microservices" width="700" height="450">
+</p>
+
+
 📖 Information
 
 In this case study, cleaning professionals provide home-cleaning services to customers. Each professional belongs to a vehicle group, and the system must enforce booking constraints such as working hours, breaks between appointments, Friday restrictions, and same-vehicle assignment for multi-professional bookings.
@@ -458,11 +463,11 @@ http://prometheus:9090
 To trace the application, you can use the following tool:
 
 - **Zipkin**  
-  Open in your browser at `http://localhost:9411/`  
+  Open in your browser at [http://localhost:9411/](http://localhost:9411/)
   Zipkin provides distributed tracing across the microservices and helps you follow request flow between gateway and backend services.
 
 - **Kafdrop**  
-  Open in your browser at `http://localhost:9091/`  
+  Open in your browser at [http://localhost:9091/](http://localhost:9091/) 
   Kafdrop provides a web UI for browsing Kafka brokers, topics, partitions, consumers, and messages such as booking events and DLQ messages (for example, `booking.events.dlt`).
 
 ### Docker Image Location
