@@ -338,6 +338,7 @@ The uploaded Postman collection defines these variables:
 * Kafka
 * Kafdrop
 * Redis
+* Flyway (Data Migration)
 ---
 
 ### Postman
