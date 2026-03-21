@@ -337,7 +337,7 @@ The uploaded Postman collection defines these variables:
 * Zipkin
 * Kafka
 * Kafdrop
-
+* Redis
 ---
 
 ### Postman
