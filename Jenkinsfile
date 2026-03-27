@@ -8,7 +8,11 @@ pipeline {
         timeout(time: 120, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '20'))
     }
-
+    
+     tools {
+        jdk 'JDK-25'
+        maven 'Maven-3.9'
+    }
 
     parameters {
         booleanParam(
