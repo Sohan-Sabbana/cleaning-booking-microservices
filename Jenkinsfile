@@ -1,11 +1,14 @@
 pipeline {
     agent any
 
+
     options {
+        skipDefaultCheckout(true)
         timestamps()
         timeout(time: 120, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '20'))
     }
+
 
     parameters {
         booleanParam(
@@ -20,19 +23,27 @@ pipeline {
         )
     }
 
+
     environment {
-        // Set these names to exactly match Jenkins -> Manage Jenkins -> Tools
+        // Must match Jenkins -> Manage Jenkins -> Tools names
         JDK_TOOL = 'JDK-25'
         MAVEN_TOOL = 'Maven-3.9'
         MVN = 'mvn -B -e'
     }
 
+
     stages {
-        stage('Checkout') {
+        stage('Workspace check') {
             steps {
-                checkout scm
+                sh 'test -f common/pom.xml'
+                sh 'test -f config-server/pom.xml'
+                sh 'test -f discovery-server/pom.xml'
+                sh 'test -f api-gateway/pom.xml'
+                sh 'test -f professional-service/pom.xml'
+                sh 'test -f booking-service/pom.xml'
             }
         }
+
 
         stage('Preflight checks') {
             tools {
@@ -40,12 +51,13 @@ pipeline {
                 maven "${env.MAVEN_TOOL}"
             }
             steps {
-                bat 'java -version'
-                bat 'mvn -version'
-                bat 'docker version'
-                bat 'git --version'
+                sh 'java -version'
+                sh 'mvn -version'
+                sh 'docker version'
+                sh 'git --version'
             }
         }
+
 
         stage('Install common') {
             tools {
@@ -53,39 +65,31 @@ pipeline {
                 maven "${env.MAVEN_TOOL}"
             }
             steps {
-                bat "${MVN} -f common/pom.xml clean install -DskipTests"
+                sh "${MVN} -f common/pom.xml clean install -DskipTests"
             }
         }
+
 
         stage('Build and test modules') {
             parallel {
                 stage('config-server') {
-                    steps {
-                        bat "${MVN} -f config-server/pom.xml clean verify"
-                    }
+                    steps { sh "${MVN} -f config-server/pom.xml clean verify" }
                 }
                 stage('discovery-server') {
-                    steps {
-                        bat "${MVN} -f discovery-server/pom.xml clean verify"
-                    }
+                    steps { sh "${MVN} -f discovery-server/pom.xml clean verify" }
                 }
                 stage('api-gateway') {
-                    steps {
-                        bat "${MVN} -f api-gateway/pom.xml clean verify"
-                    }
+                    steps { sh "${MVN} -f api-gateway/pom.xml clean verify" }
                 }
                 stage('professional-service') {
-                    steps {
-                        bat "${MVN} -f professional-service/pom.xml clean verify"
-                    }
+                    steps { sh "${MVN} -f professional-service/pom.xml clean verify" }
                 }
                 stage('booking-service') {
-                    steps {
-                        bat "${MVN} -f booking-service/pom.xml clean verify"
-                    }
+                    steps { sh "${MVN} -f booking-service/pom.xml clean verify" }
                 }
             }
         }
+
 
         stage('Publish test results') {
             steps {
@@ -93,6 +97,7 @@ pipeline {
                 junit allowEmptyResults: true, testResults: '**/target/failsafe-reports/*.xml'
             }
         }
+
 
         stage('Docker build and push') {
             when {
@@ -105,27 +110,30 @@ pipeline {
                 withCredentials([usernamePassword(
                     credentialsId: 'docker-hub',
                     usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
+                    passwordVariable: '[Credentials]'
                 )]) {
-                    bat 'echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin'
+                    sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
 
-                    bat "${MVN} -f config-server/pom.xml clean package -DskipTests"
-                    bat "${MVN} -f discovery-server/pom.xml clean package -DskipTests"
-                    bat "${MVN} -f api-gateway/pom.xml clean package -DskipTests"
-                    bat "${MVN} -f professional-service/pom.xml clean package -DskipTests"
-                    bat "${MVN} -f booking-service/pom.xml clean package -DskipTests"
 
-                    bat "docker build -f config-server/Dockerfile -t %DOCKER_NAMESPACE%/cleaning-booking-microservices-config-server:latest config-server"
-                    bat "docker build -f discovery-server/Dockerfile -t %DOCKER_NAMESPACE%/cleaning-booking-microservices-discovery-server:latest discovery-server"
-                    bat "docker build -f api-gateway/Dockerfile -t %DOCKER_NAMESPACE%/cleaning-booking-microservices-api-gateway:latest api-gateway"
-                    bat "docker build -f professional-service/Dockerfile -t %DOCKER_NAMESPACE%/cleaning-booking-microservices-professional-service:latest ."
-                    bat "docker build -f booking-service/Dockerfile -t %DOCKER_NAMESPACE%/cleaning-booking-microservices-booking-service:latest ."
+                    sh "${MVN} -f config-server/pom.xml clean package -DskipTests"
+                    sh "${MVN} -f discovery-server/pom.xml clean package -DskipTests"
+                    sh "${MVN} -f api-gateway/pom.xml clean package -DskipTests"
+                    sh "${MVN} -f professional-service/pom.xml clean package -DskipTests"
+                    sh "${MVN} -f booking-service/pom.xml clean package -DskipTests"
 
-                    bat "docker push %DOCKER_NAMESPACE%/cleaning-booking-microservices-config-server:latest"
-                    bat "docker push %DOCKER_NAMESPACE%/cleaning-booking-microservices-discovery-server:latest"
-                    bat "docker push %DOCKER_NAMESPACE%/cleaning-booking-microservices-api-gateway:latest"
-                    bat "docker push %DOCKER_NAMESPACE%/cleaning-booking-microservices-professional-service:latest"
-                    bat "docker push %DOCKER_NAMESPACE%/cleaning-booking-microservices-booking-service:latest"
+
+                    sh "docker build -f config-server/Dockerfile -t ${DOCKER_NAMESPACE}/cleaning-booking-microservices-config-server:latest config-server"
+                    sh "docker build -f discovery-server/Dockerfile -t ${DOCKER_NAMESPACE}/cleaning-booking-microservices-discovery-server:latest discovery-server"
+                    sh "docker build -f api-gateway/Dockerfile -t ${DOCKER_NAMESPACE}/cleaning-booking-microservices-api-gateway:latest api-gateway"
+                    sh "docker build -f professional-service/Dockerfile -t ${DOCKER_NAMESPACE}/cleaning-booking-microservices-professional-service:latest ."
+                    sh "docker build -f booking-service/Dockerfile -t ${DOCKER_NAMESPACE}/cleaning-booking-microservices-booking-service:latest ."
+
+
+                    sh "docker push ${DOCKER_NAMESPACE}/cleaning-booking-microservices-config-server:latest"
+                    sh "docker push ${DOCKER_NAMESPACE}/cleaning-booking-microservices-discovery-server:latest"
+                    sh "docker push ${DOCKER_NAMESPACE}/cleaning-booking-microservices-api-gateway:latest"
+                    sh "docker push ${DOCKER_NAMESPACE}/cleaning-booking-microservices-professional-service:latest"
+                    sh "docker push ${DOCKER_NAMESPACE}/cleaning-booking-microservices-booking-service:latest"
                 }
             }
         }
